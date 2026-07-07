@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>CPU simulation</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+
+        <div id="workspace">
+
+            <!-- I/O Panel -->
+            <div class="panel" id="left">
+                <div class="section">
+                    <div class="section-header">Output Devices</div>
+                    <div id="output-wrap">
+                        <div id="output-row">
+                            <div id="text-display">
+                                <!-- Max length - 10 chars -->
+                            </div>
+                            <div id="num-display">
+                                <!-- Max # of digits - 3 -->
+                                <!-- Max # of digits (signed) - 4 -->
+                            </div>
+                        </div>
+
+                        <div id="grid-display">
+                            <div id="pixel-grid">
+                                <!-- 32x32 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Input Controller</div>
+                    <div id="input-wrap">
+                        <div id="dpad-wrap">
+                            <button id="btn-up">⌃</button>
+                            <button id="btn-lft">‹</button>
+                            <button id="btn-rgt">›</button>
+                            <button id="btn-dwn">⌄</button>
+                        </div>
+
+                        <div id="ctr-btns-wrap">
+                            <button id="ctr-btn-one">1</button>
+                            <button id="ctr-btn-two">2</button>
+                        </div>
+
+                        <div id="rgt-btns-wrap">
+                            <button id="ctr-btn-a">A</button>
+                            <button id="ctr-btn-b">B</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control/Memory Panel -->
+            <div class="panel" id="center">
+                <div class="section">
+                    <div class="section-header">CONTROL</div>
+                    <div id="control-wrap">
+                        <div id="control-buttons">
+                            <button id="clock-toggle">▶ Run</button>
+                            <button id="line-step">Step Inst</button>
+                            <button id="reset-program">⟲ Reset</button>
+                        </div>
+
+                        <div id="speed-control">
+                            <div id="speed-header">
+                                <span>Execution Rate</span>
+                                <span id="speed-value">100 Hz</span>
+                            </div>
+
+                            <input id="program-speed-slider" name="speed" type="range" min="1" max="1000" step="1"
+                                value="100" list="markers">
+
+                            <datalist id="markers">
+                                <option value="1"></option>
+                                <option value="250"></option>
+                                <option value="500"></option>
+                                <option value="750"></option>
+                                <option value="1000"></option>
+                            </datalist>
+                        </div>
+
+                        <div id="cpu-status-bar">
+                            <div>
+                                STATUS:
+                                <span id="cpu-status-text" class="status-running">
+                                    HALTED
+                                </span>
+                            </div>
+
+                            <div>PC: 0000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">FLAGS</div>
+                    <div id="flags-panel">
+
+                        <div id="flags-wrap">
+                            <div class="flag-box" id="flag-zero">
+                                <div class="flag-label">Z</div>
+                                <div class="flag-value">0</div>
+                            </div>
+
+                            <div class="flag-box" id="flag-carry">
+                                <div class="flag-label">C</div>
+                                <div class="flag-value">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="section">
+                    <div class="section-header">MEMORY</div>
+                    <div id="memory-display-wrap">
+                        <div id="reg-file-display"></div>
+
+                        <div id="data-memory-display"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Panel -->
+            <div class="panel" id="right">
+                <div class="section-header">ASSEMBLY EDITOR</div>
+                <textarea id="code-editor">; Write your program
+LDI r2 100
+LDI r3 250
+ADI r1 1
+ADI r2 255
+STR r3 r1
+BRH !Z 1
+
+HLT</textarea>
+            </div>
+
+        </div>
+
+        <div id="bottom-panel">
+
+            <div id="bottom-toolbar">
+
+                <button id="problems-toggle">
+                    Problems (0)
+                </button>
+
+                <div id="bottom-buttons">
+
+                    <button id="isa-button">
+                        ISA
+                    </button>
+
+                    <button id="io-button">
+                        I/O
+                    </button>
+
+                    <button id="help-button">
+                        Help
+                    </button>
+
+                    <button id="about-button">
+                        About
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="problems-panel">
+
+                <div id="problems-list">
+
+                    No problems.
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="modal-overlay" class="hidden">
+
+            <div id="modal-window">
+
+                <div id="modal-header">
+
+                    <span id="modal-title">Documentation</span>
+
+                    <button id="modal-close">✕</button>
+
+                </div>
+
+                <div id="modal-body">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
