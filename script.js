@@ -1,13 +1,10 @@
-const bottomPanel =
-    document.getElementById("bottom-panel");
+/* ===== UI Shell and Panels ===== */
+const bottomPanel = document.getElementById("bottom-panel");
+const problemsToggle = document.getElementById("problems-toggle");
 
-document
-    .getElementById("problems-toggle")
-    .onclick = () => {
-
-        bottomPanel.classList.toggle("open");
-
-    };
+problemsToggle.addEventListener("click", () => {
+    bottomPanel.classList.toggle("open");
+});
 
 class ProblemsPanel {
 
@@ -112,11 +109,8 @@ class Modal {
 
 }
 
-const problems =
-    new ProblemsPanel(
-        document.getElementById("problems-list")
-    );
-const modal = new Modal;
+const problems = new ProblemsPanel(document.getElementById("problems-list"));
+const modal = new Modal();
 
 class DocumentationManager {
 
@@ -143,23 +137,19 @@ class DocumentationManager {
 
 const docs = new DocumentationManager(modal);
 
-const isaButton = document.getElementById("isa-button");
-const ioButton = document.getElementById("io-button");
-const helpButton = document.getElementById("help-button");
-const aboutButton = document.getElementById("about-button");
+const docButtons = {
+    isa: document.getElementById("isa-button"),
+    io: document.getElementById("io-button"),
+    help: document.getElementById("help-button"),
+    about: document.getElementById("about-button"),
+    changelog: document.getElementById("changelog-button")
+};
 
-isaButton.onclick =
-    () => docs.open("isa");
+Object.entries(docButtons).forEach(([page, button]) => {
+    button.addEventListener("click", () => docs.open(page));
+});
 
-ioButton.onclick =
-    () => docs.open("io");
-
-helpButton.onclick =
-    () => docs.open("help");
-
-aboutButton.onclick =
-    () => docs.open("about");
-
+/* ===== Documentation ===== */
 const Documentation = {
 
     home: {
@@ -197,7 +187,8 @@ const Documentation = {
                 const category = data.category || "General";
                 const operands = Array.isArray(data.operands) ? data.operands : [];
                 const flags = Array.isArray(data.flags) ? data.flags : [];
-                const example = data.example || "N/A";
+                const example = data.example || "";
+                const pseudo = data.pseudo || "";
 
                 html += `
             <div class="doc-card">
@@ -216,7 +207,18 @@ const Documentation = {
                     <h3>Syntax</h3>
                     <pre class="doc-code">${data.syntax || ""}</pre>
                 </div>
+            `;
 
+                if (pseudo) {
+                    html += `
+                <div class="doc-section">
+                    <h3>Pseudocode</h3>
+                    <pre class="doc-code">${pseudo}</pre>
+                </div>
+            `;
+                }
+
+                html += `
                 <div class="doc-section">
                     <h3>Operands</h3>
                     <table class="doc-table">
@@ -244,32 +246,38 @@ const Documentation = {
                 html += `
                     </table>
                 </div>
+            `;
 
+                if (flags.length) {
+                    html += `
                 <div class="doc-section">
                     <h3>Flags</h3>
                     <div class="doc-tags">
             `;
 
-                if (flags.length) {
                     flags.forEach(flag => {
                         html += `
                     <span class="doc-tag">${flag}</span>
                 `;
                     });
-                } else {
-                    html += `
-                    <span class="doc-tag">None</span>
-                `;
-                }
 
-                html += `
+                    html += `
                     </div>
                 </div>
+            `;
+                }
 
+
+                if (example) {
+                    html += `
                 <div class="doc-section">
                     <h3>Example</h3>
                     <pre class="doc-code">${example}</pre>
                 </div>
+            `;
+                }
+
+                html += `
             </div>
             `;
             }
@@ -286,82 +294,76 @@ const Documentation = {
 
     io: {
 
-        title: "I/O Devices",
+        title: "I/O Protocol",
 
         render() {
 
             let html = `
-        <div class="doc-page">
-
-            <p class="doc-intro">
-                The Input/Output devices are memory-mapped to the last 16 registers in the Data Memory. Writing or reading from these addresses controls each device.
-            </p>
-    `;
+            <div class="doc-page">
+                <div class="doc-header">
+                    <h1>Protocol</h1>
+                    <p>
+                        The I/O devices use the last 16 data memory addresses to interact with the CPU.
+                    </p>
+                </div>
+        `;
 
             for (const device of Object.values(Devices)) {
-
                 html += `
             <div class="doc-card">
-
-                <h2>${device.title}</h2>
+                <div class="doc-card-header">
+                    <h2>${device.title}</h2>
+                    <span class="doc-badge">Device</span>
+                </div>
         `;
 
                 if (device.description) {
-
                     html += `
-                <p>${device.description}</p>
+                <div class="doc-section">
+                    <h3>Description</h3>
+                    <p>${device.description}</p>
+                </div>
             `;
-
                 }
 
                 html += `
-                <table class="doc-table">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>Address</th>
-                            <th>Operation</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
+                <div class="doc-section">
+                    <h3>Addresses</h3>
+                    <table class="doc-table">
+                        <thead>
+                            <tr>
+                                <th>Address</th>
+                                <th>Operation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
         `;
 
                 for (const [addr, entry] of Object.entries(device.addresses)) {
+                    const accessClass = entry.access.toLowerCase().replace("/", "-");
 
                     html += `
-                <tr>
-
-                    <td>${addr}</td>
-
-<td>
-    <span class="io-access ${entry.access.toLowerCase().replace("/", "-")}">
-        ${entry.access}
-    </span>
-
-    ${entry.description}
-</td>
-
-                </tr>
-            `;
-
+                            <tr>
+                                <td>${addr}</td>
+                                <td>
+                                    <span class="io-access ${accessClass}">${entry.access}</span>
+                                    ${entry.description}
+                                </td>
+                            </tr>
+                        `;
                 }
 
                 html += `
-                    </tbody>
-
-                </table>
-
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
-
             }
 
-            html += "</div>";
+            html += `
+            </div>
+        `;
 
             return html;
 
@@ -373,11 +375,33 @@ const Documentation = {
         title: "Help Guide",
 
         render() {
-
             return `
-...
-`;
+            <div class="doc-page">
+                <div class="doc-header">
+                    <h1>Help Guide</h1>
+                    <p>Quick guidance for using the emulator and navigating its controls.</p>
+                </div>
 
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Getting started</h2>
+                        <span class="doc-badge">Guide</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Run a program</h3>
+                        <p>Type assembly into the editor, then press Run to start execution.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Step through instructions</h3>
+                        <p>Use Step Inst to execute one instruction at a time and inspect the state.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Inspect output</h3>
+                        <p>Watch the display panels and memory/register views update as the program runs.</p>
+                    </div>
+                </div>
+            </div>
+        `;
         }
     },
 
@@ -385,11 +409,82 @@ const Documentation = {
         title: "About",
 
         render() {
-
             return `
-...
-`;
+            <div class="doc-page">
+                <div class="doc-header">
+                    <h1>About</h1>
+                    <p>A lightweight web-based CPU emulator for learning assembly and machine behavior.</p>
+                </div>
 
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Project overview</h2>
+                        <span class="doc-badge">Info</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Purpose</h3>
+                        <p>This emulator provides a simple interface for writing, running, and observing small assembly programs.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Features</h3>
+                        <p>It includes a visual display, input controls, registers, memory view, and basic documentation panels.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+    },
+
+    changelog: {
+        title: "Changelog",
+
+        render() {
+            return `
+            <div class="doc-page">
+                <div class="doc-header">
+                    <h1>Changelog</h1>
+                    <p>Recent updates and improvements to the emulator.</p>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.0</h2>
+                        <span class="doc-badge">INITIAL RELEASE</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>July 7, 2026</h3>
+                        <ul>
+                            <li>First public release of the emulator.</li>
+                            <li>ISA and Protocol implemented.</li>
+                            <li>Basic UI and controls functional.</li>
+                            <li>Documentation and Error Detection framework started.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.1</h2>
+                        <span class="doc-badge">BUGFIXING</span>
+                        <span class="doc-badge">QUALITY OF LIFE</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>July 8, 2026</h3>
+                        <ul>
+                            <li>Modal styling updated to improve consistency.</li>
+                            <li>Other general styling improvements.</li>
+                            <li>Improved execution rate slider</li>
+                            <li>Fixed issue with memory display not updating correctly after device writes.</li>
+                            <li>Fixed bug with the controller not updating its state correctly when buttons are pressed.</li>
+                            <li>ISA and Protocol documentation finished.</li>
+                            <li>Added help and about pages.</li>
+                            <li>Added changelog.</li>
+                            <li>Will anyone actually read this?</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
         }
     }
 
@@ -436,6 +531,8 @@ const Instructions = {
 
         flags: ["Z", "C"],
 
+        pseudo: "rC = rA + rB;",
+
         example: "ADD r1 r2 r3"
 
     },
@@ -456,6 +553,8 @@ const Instructions = {
             "Subtracts two registers.",
 
         flags: ["Z", "C"],
+
+        pseudo: "rC = rA - rB;",
 
         example: "SUB r1 r2 r3"
 
@@ -478,6 +577,8 @@ const Instructions = {
 
         flags: ["Z", "C"],
 
+        pseudo: "rC = ~(rA | rB);",
+
         example: "NOR r1 r2 r3"
 
     },
@@ -498,6 +599,8 @@ const Instructions = {
             "Preforms bitwise AND upon two registers.",
 
         flags: ["Z", "C"],
+
+        pseudo: "rC = rA & rB;",
 
         example: "AND r1 r2 r3"
 
@@ -520,6 +623,8 @@ const Instructions = {
 
         flags: ["Z", "C"],
 
+        pseudo: "rC = rA ^ rB;",
+
         example: "XOR r1 r2 r3"
 
     },
@@ -540,6 +645,8 @@ const Instructions = {
 
         flags: ["Z", "C"],
 
+        pseudo: "rB = rA >> 1;",
+
         example: "RSH r1 r2"
 
     },
@@ -557,6 +664,8 @@ const Instructions = {
 
         description:
             "Loads a value into a register.",
+
+        pseudo: "rA = val;",
 
         example: "LDI r1 128"
 
@@ -578,6 +687,8 @@ const Instructions = {
 
         flags: ["Z", "C"],
 
+        pseudo: "rA += val;",
+
         example: "ADI r1 128"
 
     },
@@ -594,6 +705,8 @@ const Instructions = {
 
         description:
             "Jumps to the specified instruction address.",
+
+        pseudo: "PC = address;",
 
         example: "JMP 256"
 
@@ -613,6 +726,8 @@ const Instructions = {
         description:
             "Jumps to the specified instruction address if the condition is true.",
 
+        pseudo: "if (condition) PC = address;",
+
         example: "BRH C 256"
 
     },
@@ -630,6 +745,8 @@ const Instructions = {
         description:
             "Pushes the next address to the stack and jumps to the specified instruction address.",
 
+        pseudo: "stack.push(PC + 1); PC = address;",
+
         example: "CAL 256"
 
     },
@@ -645,6 +762,8 @@ const Instructions = {
         description:
             "Pops the last address from the stack and jumps to that address.",
 
+        pseudo: "PC = stack.pop();",
+
         example: `JMP 256
 RET`
 
@@ -659,11 +778,13 @@ RET`
         operands: [
             ["rA", "Pointer Register"],
             ["rB", "Destination Register"],
-            ["offset", "Pointer Offset"]
+            ["offset", "Pointer Offset (4-Bit 2's Complement)"]
         ],
 
         description:
             "Loads from the data memory.",
+
+        pseudo: "rB = mem[rA + offset];",
 
         example: "LOD r1 r2 3"
 
@@ -678,11 +799,13 @@ RET`
         operands: [
             ["rA", "Pointer Register"],
             ["rB", "Data Register"],
-            ["offset", "Pointer Offset"]
+            ["offset", "Pointer Offset (4-Bit 2's Complement)"]
         ],
 
         description:
             "Stores a value to the data memory.",
+
+        pseudo: "mem[rA + offset] = rB;",
 
         example: "STR r1 r2 3"
 
@@ -701,38 +824,38 @@ const Devices = {
         addresses: {
 
             240: {
-                access: "W",
+                access: "Write",
                 description: "X coordinate"
             },
 
             241: {
-                access: "W",
+                access: "Write",
                 description: "Y coordinate"
             },
 
             242: {
-                access: "W",
-                description: "Draw pixel"
+                access: "Write",
+                description: "Draw pixel on write"
             },
 
             243: {
-                access: "W",
-                description: "Clear pixel"
+                access: "Write",
+                description: "Clear pixel on write"
             },
 
             244: {
-                access: "R",
+                access: "Read",
                 description: "Read pixel state"
             },
 
             245: {
-                access: "W",
-                description: "Flush buffer to front"
+                access: "Write",
+                description: "Flush buffer to front on write"
             },
 
             246: {
-                access: "W",
-                description: "Clear buffer"
+                access: "Write",
+                description: "Clear buffer on write"
             }
 
         }
@@ -748,18 +871,18 @@ const Devices = {
         addresses: {
 
             247: {
-                access: "W",
+                access: "Write",
                 description: "Write character to buffer"
             },
 
             248: {
-                access: "W",
-                description: "Flush buffer to front"
+                access: "Write",
+                description: "Flush buffer to front on write"
             },
 
             249: {
-                access: "W",
-                description: "Clear buffer"
+                access: "Write",
+                description: "Clear buffer on write"
             },
 
         }
@@ -775,23 +898,23 @@ const Devices = {
         addresses: {
 
             250: {
-                access: "W",
+                access: "Write",
                 description: "Display number"
             },
 
             251: {
-                access: "W",
-                description: "Clear display"
+                access: "Write",
+                description: "Clear display on write"
             },
 
             252: {
-                access: "W",
-                description: "Switch display to signed mode"
+                access: "Write",
+                description: "Switch display to signed mode on write"
             },
 
             253: {
-                access: "W",
-                description: "Switch display to unsigned mode"
+                access: "Write",
+                description: "Switch display to unsigned mode on write"
             },
 
         }
@@ -807,7 +930,7 @@ const Devices = {
         addresses: {
 
             254: {
-                access: "R",
+                access: "Read",
                 description: "Random Number"
             }
 
@@ -824,7 +947,7 @@ const Devices = {
         addresses: {
 
             255: {
-                access: "R",
+                access: "Read",
                 description: "Controller state"
             }
 
@@ -902,6 +1025,12 @@ class Machine {
         this.ui = ui;
 
         this.interval = null;
+        this.lastStepTime = 0;
+        this.lastSpeedSampleTime = performance.now();
+        this.ticksSinceLastSpeedSample = 0;
+        this.displayedSpeedHz = Number(speedSlider.value);
+        this.intervalMode = "timer";
+        this.accumulator = 0;
 
     }
 
@@ -910,6 +1039,24 @@ class Machine {
         this.memory.tick();
         this.cpu.step();
         this.ui.render();
+        this.updateSpeedDisplay();
+
+    }
+
+    updateSpeedDisplay() {
+
+        this.ticksSinceLastSpeedSample += 1;
+
+        const now = performance.now();
+        const elapsed = now - this.lastSpeedSampleTime;
+
+        if (elapsed >= 250) {
+            const measuredHz = Math.max(1, Math.round((this.ticksSinceLastSpeedSample / elapsed) * 1000));
+            this.displayedSpeedHz = measuredHz;
+            this.ticksSinceLastSpeedSample = 0;
+            this.lastSpeedSampleTime = now;
+            updateSpeedText(this.displayedSpeedHz);
+        }
 
     }
 
@@ -917,20 +1064,73 @@ class Machine {
 
         if (this.interval) return;
         this.cpu.running = true;
-        const loop = () => {
-            if (!this.cpu.running) return;
-            this.tick();
+        this.lastStepTime = performance.now();
+        this.lastSpeedSampleTime = performance.now();
+        this.ticksSinceLastSpeedSample = 0;
+        this.displayedSpeedHz = Number(speedSlider.value);
+        updateSpeedText(this.displayedSpeedHz);
+
+        const targetSpeed = Number(speedSlider.value);
+        this.intervalMode = targetSpeed < 60 ? "loop" : "timer";
+        this.accumulator = 0;
+
+        if (this.intervalMode === "loop") {
+            const loop = () => {
+                if (!this.cpu.running) return;
+                this.tick();
+                this.interval = setTimeout(loop, getSpeedDelay());
+            };
             this.interval = setTimeout(loop, getSpeedDelay());
+            return;
         }
-        loop();
+
+        const runTimer = () => {
+            if (!this.cpu.running) return;
+
+            const now = performance.now();
+            const stepInterval = Math.max(1, Math.round(1000 / targetSpeed));
+            const elapsed = now - this.lastStepTime;
+            this.lastStepTime = now;
+            this.accumulator += elapsed;
+
+            let steps = 0;
+            while (this.accumulator >= stepInterval && steps < 8) {
+                this.tick();
+                this.accumulator -= stepInterval;
+                steps += 1;
+            }
+
+            const wait = Math.max(1, Math.ceil(stepInterval));
+            this.interval = setTimeout(runTimer, wait);
+        };
+
+        this.lastStepTime = performance.now();
+        this.interval = setTimeout(runTimer, Math.max(1, Math.round(1000 / targetSpeed)));
 
     }
 
     stop() {
 
         this.cpu.running = false;
-        clearTimeout(this.interval);
+        if (this.interval !== null) {
+            if (this.intervalMode === "loop") {
+                clearTimeout(this.interval);
+            } else {
+                clearTimeout(this.interval);
+            }
+        }
         this.interval = null;
+        this.intervalMode = "timer";
+        updateSpeedText(Number(speedSlider.value));
+
+    }
+
+    restart() {
+
+        if (this.cpu.running) {
+            this.stop();
+            this.start();
+        }
 
     }
 
@@ -1309,14 +1509,14 @@ class Memory {
         addr &= 0xff;
         value &= 0xff;
 
+        this.data[addr] = value;
+
         for (const device of this.devices) {
             if (device.owns(addr)) {
                 device.write(addr, value);
                 return;
             }
         }
-
-        this.data[addr] = value;
 
     }
 
@@ -1384,7 +1584,7 @@ class UI {
     updateMemory() {
 
         for (let i = 0; i < 256; i++) {
-            const v = this.memory.read(i);
+            const v = this.memory.data[i];
             memCells[i].dec.textContent = v;
             const bin = formatBinaryRows(v);
             memCells[i].binTop.textContent = bin.top;
@@ -1665,6 +1865,8 @@ class ControllerDevice extends Device {
         super(255);
         memory.register(this);
 
+        this.memory = memory;
+
         this.liveState = {
             up: 0,
             down: 0,
@@ -1693,6 +1895,26 @@ class ControllerDevice extends Device {
     read(addr) {
 
         return this.readButtons();
+
+    }
+
+    syncMemory() {
+
+        this.memory.data[255] = this.readButtons();
+
+        if (typeof ui !== "undefined") {
+            ui.updateMemory();
+        }
+
+    }
+
+    updateState(key, value) {
+
+        this.liveState[key] = value;
+        this.latchedState = {
+            ...this.liveState
+        };
+        this.syncMemory();
 
     }
 
@@ -1734,6 +1956,7 @@ class ControllerDevice extends Device {
         this.latchedState = {
             ...this.liveState
         };
+        this.syncMemory();
 
     }
 
@@ -1741,8 +1964,8 @@ class ControllerDevice extends Device {
 
         const btn = document.getElementById(id);
 
-        const press = () => this.liveState[key] = 1;
-        const release = () => this.liveState[key] = 0;
+        const press = () => this.updateState(key, 1);
+        const release = () => this.updateState(key, 0);
 
         btn.addEventListener("mousedown", press);
         btn.addEventListener("mouseup", release);
@@ -1764,13 +1987,13 @@ class ControllerDevice extends Device {
 
             switch (e.code) {
 
-                case "ArrowUp": this.liveState.up = 1; break;
-                case "ArrowDown": this.liveState.down = 1; break;
-                case "ArrowLeft": this.liveState.left = 1; break;
-                case "ArrowRight": this.liveState.right = 1; break;
+                case "ArrowUp": this.updateState("up", 1); break;
+                case "ArrowDown": this.updateState("down", 1); break;
+                case "ArrowLeft": this.updateState("left", 1); break;
+                case "ArrowRight": this.updateState("right", 1); break;
 
-                case "KeyZ": this.liveState.a = 1; break;
-                case "KeyX": this.liveState.b = 1; break;
+                case "KeyZ": this.updateState("a", 1); break;
+                case "KeyX": this.updateState("b", 1); break;
 
             }
 
@@ -1780,13 +2003,13 @@ class ControllerDevice extends Device {
 
             switch (e.code) {
 
-                case "ArrowUp": this.liveState.up = 0; break;
-                case "ArrowDown": this.liveState.down = 0; break;
-                case "ArrowLeft": this.liveState.left = 0; break;
-                case "ArrowRight": this.liveState.right = 0; break;
+                case "ArrowUp": this.updateState("up", 0); break;
+                case "ArrowDown": this.updateState("down", 0); break;
+                case "ArrowLeft": this.updateState("left", 0); break;
+                case "ArrowRight": this.updateState("right", 0); break;
 
-                case "KeyZ": this.liveState.a = 0; break;
-                case "KeyX": this.liveState.b = 0; break;
+                case "KeyZ": this.updateState("a", 0); break;
+                case "KeyX": this.updateState("b", 0); break;
 
             }
 
@@ -1795,7 +2018,7 @@ class ControllerDevice extends Device {
         window.addEventListener("blur", () => {
 
             Object.keys(this.liveState).forEach(key => {
-                this.liveState[key] = 0;
+                this.updateState(key, 0);
             });
 
         });
@@ -1823,11 +2046,21 @@ const formatBinaryRows = v => {
     const b = toBin(v);
     return { top: b.slice(0, 4), bottom: b.slice(4) };
 };
-const getSpeedDelay = () => Math.max(1, Math.floor(1000 / Number(speedSlider.value)));
+const getSpeedDelay = () => Math.max(1, Math.round(1000 / Number(speedSlider.value)));
+
+function updateSpeedText(value) {
+    speedValue.textContent = `${value} Hz`;
+}
 
 /* ===== UI updates ===== */
 function updateSpeedUI() {
-    speedValue.textContent = speedSlider.value + " Hz";
+    const targetSpeed = Number(speedSlider.value);
+    updateSpeedText(targetSpeed);
+
+    if (machine && machine.cpu.running) {
+        machine.displayedSpeedHz = targetSpeed;
+        machine.restart();
+    }
 }
 
 function loadProgram() {
