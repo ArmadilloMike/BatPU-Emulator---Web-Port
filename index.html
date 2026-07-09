@@ -99,7 +99,7 @@
                                 </span>
                             </div>
 
-                            <div>PC: 0000</div>
+                            <div>PC: ----</div>
                         </div>
                     </div>
                 </div>
@@ -122,9 +122,25 @@
                     </div>
                 </div>
 
+                <div class="section">
+                    <div class="section-header">CALL STACK</div>
+                    <div id="stack-panel">
+                        <div id="stack-display-wrap">
+                            <div class="stack-box" id="stack-size">
+                                <div class="stack-label">Stack Size:</div>
+                                <div class="stack-value">0</div>
+                            </div>
+
+                            <div class="stack-box" id="stack-top">
+                                <div class="stack-label">Top of Stack:</div>
+                                <div class="stack-value">----------</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="section">
-                    <div class="section-header">MEMORY</div>
+                    <div class="section-header">REGISTERS & MEMORY</div>
                     <div id="memory-display-wrap">
                         <div id="reg-file-display"></div>
 
@@ -136,7 +152,10 @@
             <!-- Program Panel -->
             <div class="panel" id="right">
                 <div class="section-header">ASSEMBLY EDITOR</div>
-                <textarea id="code-editor">; Write your program
+                <div class="editor-shell">
+                    <div id="editor-gutter" class="editor-gutter" aria-hidden="true"></div>
+                    <div class="editor-text-area">
+                        <textarea id="code-editor">; Write your program
 LDI r2 100
 LDI r3 250
 ADI r1 1
@@ -145,6 +164,8 @@ STR r3 r1
 BRH !Z 1
 
 HLT</textarea>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -177,6 +198,10 @@ HLT</textarea>
 
                     <button id="changelog-button">
                         Changelog
+                    </button>
+
+                    <button id="project-repo-button">
+                        Project Repository
                     </button>
 
                 </div>
