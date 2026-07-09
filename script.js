@@ -11,7 +11,7 @@ class ProblemsPanel {
     constructor(element) {
 
         this.element = element;
-
+        this.toggle = document.getElementById("problems-toggle");
         this.items = [];
 
     }
@@ -35,16 +35,29 @@ class ProblemsPanel {
 
     }
 
+    set(items) {
+
+        this.items = items;
+        this.render();
+
+    }
+
     render() {
+
+        this.toggle.textContent = `Problems (${this.items.length})`;
+        this.toggle.classList.toggle("has-problems", this.items.length > 0);
 
         if (this.items.length === 0) {
 
             this.element.innerHTML =
                 "<div>No problems.</div>";
 
+            bottomPanel.classList.remove("open");
             return;
 
         }
+
+        bottomPanel.classList.add("open");
 
         this.element.innerHTML =
             this.items.map(item => `
@@ -148,6 +161,11 @@ const docButtons = {
 Object.entries(docButtons).forEach(([page, button]) => {
     button.addEventListener("click", () => docs.open(page));
 });
+
+const projectRepoButton = document.getElementById("project-repo-button");
+projectRepoButton.onclick = () => {
+    window.open("https://github.com/Cheze-Burgur/BatPU-Emulator---Web-Port", "_blank");
+};
 
 /* ===== Documentation ===== */
 const Documentation = {
@@ -303,7 +321,7 @@ const Documentation = {
                 <div class="doc-header">
                     <h1>Protocol</h1>
                     <p>
-                        The I/O devices use the last 16 data memory addresses to interact with the CPU.
+                        The I/O devices mapped to the last 16 data memory addresses use them to interact with the CPU.
                     </p>
                 </div>
         `;
@@ -379,25 +397,79 @@ const Documentation = {
             <div class="doc-page">
                 <div class="doc-header">
                     <h1>Help Guide</h1>
-                    <p>Quick guidance for using the emulator and navigating its controls.</p>
+                    <p>Quick guidance for using the emulator.</p>
                 </div>
 
                 <div class="doc-card">
                     <div class="doc-card-header">
-                        <h2>Getting started</h2>
+                        <h2>How to Write and Run a Program</h2>
                         <span class="doc-badge">Guide</span>
                     </div>
                     <div class="doc-section">
-                        <h3>Run a program</h3>
-                        <p>Type assembly into the editor, then press Run to start execution.</p>
+                        <h3>How to Use the Editor</h3>
+                        <p>
+                            <strong>The editor</strong> is where you write your assembly programs. Using the 16 instructions specified by <strong>Instruction Set Architecture (ISA)</strong>, 
+                            you can write programs that the CPU can execute. Each instruction and its operands should all be on their own separate lines. 
+                        </p>
+                        <p>
+                            <strong>Comments</strong> can be added to your program by using the <span class="code">;</span> symbol. Everything after the <span class="code">;</span> symbol on that line will be ignored by the assembler.
+                        </p>
+                        <p>
+                            Once you have written your program, you can click the <strong>Run</strong> button to assemble and execute it, or click the <strong>Step</strong> button to execute it line by line.
+                        </p>
+                        <p>
+                            If there are any errors in your program, they will be displayed in the <strong>Problems Panel</strong> at the bottom of the screen.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>What are the instructions?</h2>
+                        <span class="doc-badge">Guide</span>
                     </div>
                     <div class="doc-section">
-                        <h3>Step through instructions</h3>
-                        <p>Use Step Inst to execute one instruction at a time and inspect the state.</p>
+                        <h3>Instruction Syntax and Semantics</h3>
+                        <p>
+                            All of the instructions follow the same <strong>syntax</strong>. Each instruction has their own unique three-letter
+                            identifier, called a <strong>mnemonic</strong>. These should be the first thing on each line, followed by the <strong>operands</strong>, if any.
+                            An intruction can have up to three operands, which are separated by spaces. The operands can be <strong>registers</strong>, <strong>immediate values</strong>,
+                            or <strong>program addresses</strong>, depending on the function of the instruction.
+                        </p>
+                        <p>
+                            The instructions can fall into one of four categories: <strong>Arithmetic</strong>, <strong>Register Manipulation</strong>,
+                            <strong>Branching and Subroutines</strong>, and <strong>Memory Manipulation</strong>
+                        </p>
+                        <ul>
+                            <li><strong>Arithmetic instructions</strong> perform mathematical and logical operations upon the values in registers.</li>
+                            <li><strong>Register Manipulation instructions</strong> allow you to load values into registers or add immediate values to them.</li>
+                            <li><strong>Branching and Subroutine instructions</strong> allow you to jump to different parts of your program, or call subroutines.</li>
+                            <li><strong>Memory Manipulation instructions</strong> allow you to read from and write to the data memory.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Using the CPU</h2>
+                        <span class="doc-badge">Guide</span>
                     </div>
                     <div class="doc-section">
-                        <h3>Inspect output</h3>
-                        <p>Watch the display panels and memory/register views update as the program runs.</p>
+                        <h3>Math and Registers</h3>
+                        <p>
+                            The CPU has 16 registers, which are used to store values for use in your program. 
+                            You can view the contents of the registers in the <strong>Registers Panel</strong>.
+                        </p>
+                        <p>
+                            To perform mathematical operations, you can use the arithmetic instructions to manipulate the values in the registers. 
+                            To reference a register for use in an instruction, you type the letter r followed by the register number (0-15).
+                            For example, to reference register 3, you would type <span class="code">r3</span>.
+                        </p>
+                        <p>
+                            Register 0 is what is called a <strong>zero register</strong>, which means it always contains the value 0. 
+                            You can read from it like a normal register, but you cannot write to it. Any attempt to write to register 0 will be ignored.
+                            r0 will always contain and read as zero, which can be useful for certain operations, such as clearing a register or comparing values.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -413,7 +485,7 @@ const Documentation = {
             <div class="doc-page">
                 <div class="doc-header">
                     <h1>About</h1>
-                    <p>A lightweight web-based CPU emulator for learning assembly and machine behavior.</p>
+                    <p>A web-based CPU emulator for learning assembly, CPU architecture, and low-level programming.</p>
                 </div>
 
                 <div class="doc-card">
@@ -422,12 +494,26 @@ const Documentation = {
                         <span class="doc-badge">Info</span>
                     </div>
                     <div class="doc-section">
-                        <h3>Purpose</h3>
-                        <p>This emulator provides a simple interface for writing, running, and observing small assembly programs.</p>
+                        <h3>What is this?</h3>
+                        <p>This is a web-based emulator for a digital CPU, designed to go along with 
+                        <a href="https://github.com/mattbatwings" target="_blank">MattBatWings'</a> 
+                        <a href="https://github.com/mattbatwings/BatPU-2" target="_blank">Redstone CPU</a>. 
+                        I made this as a kind of companion project while I was building his in-game CPU 
+                        design, as a way to better understand how and why everything works in a more technical way 
+                        than just building the circuits.</p>
                     </div>
                     <div class="doc-section">
                         <h3>Features</h3>
-                        <p>It includes a visual display, input controls, registers, memory view, and basic documentation panels.</p>
+                        <ul>
+                            <li>Complete emulator matching the capabilities of the original CPU</li>
+                            <li>Visual displays for program output</li>
+                            <li>Input controller for user interaction</li>
+                            <li>Display of the ALU flag states</li>
+                            <li>Panels to view the contents of the Registers and Memory</li>
+                            <li>Text editor for writing and assembling programs based on the ISA</li>
+                            <li>Error detection and reporting</li>
+                            <li>Full ISA and Protocol documentation</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -480,6 +566,33 @@ const Documentation = {
                             <li>Added help and about pages.</li>
                             <li>Added changelog.</li>
                             <li>Will anyone actually read this?</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.2</h2>
+                        <span class="doc-badge">NEW FEATURES</span>
+                        <span class="doc-badge">BUGFIXING</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>July 9, 2026</h3>
+                        <ul>
+                            <li>Implemented error detection and handling.</li>
+                            <li>Added line numbering to the side of the editor.</li>
+                            <ul>
+                                <li>First column displays line numbers.</li>
+                                <li>Second column displays instruction numbers (Ignores comments and empty lines).</li>
+                            </ul>
+                            <li>Added a stack display panel to show the size and top of the stack.</li>
+                            <li>Made Program Counter render with <span class="code">cpu.pc - 1</span>. Temporary fix. Program Counter will be changed to start at 0 in future updates.</li>
+                            <li>Added PC display placeholder for when the program counter is not running.</li>
+                            <li>Added a link to the project repository.</li>
+                            <li>Finished about page with project overview and features.</li>
+                            <li>Began work on the about page</li>
+                            <li>Small styling improvements.</li>
+                            <li>There are probably a ton of bugs so if you find any please let me know!</li>
                         </ul>
                     </div>
                 </div>
@@ -967,6 +1080,9 @@ const cpuStatusText = document.getElementById("cpu-status-text");
 const speedSlider = document.getElementById("program-speed-slider");
 const speedValue = document.getElementById("speed-value");
 const outputRow = document.getElementById("output-row");
+const editorGutter = document.getElementById("editor-gutter");
+const codeEditor = document.getElementById("code-editor");
+const editorLineMap = [];
 
 // Create pixel elements (32x32)
 for (let i = 0; i < 32 * 32; i++) {
@@ -1152,18 +1268,288 @@ class Machine {
 class Assembler {
 
     static assemble(source) {
-        return source
-            .split("\n")
-            .map(line => line.split(";")[0].trim())
-            .filter(Boolean)
-            .map(line => line.replace(/\s+/g, " "))
-            .map(line => this.decodeInstruction(line));
+        return this.assembleWithDiagnostics(source).program;
     }
 
-    static decodeInstruction(line) {
+    static assembleWithDiagnostics(source) {
+        const program = [];
+        const problems = [];
+
+        source
+            .split("\n")
+            .forEach((rawLine, index) => {
+                const lineText = rawLine.split(";")[0].trim();
+
+                if (!lineText) return;
+
+                const normalized = lineText.replace(/\s+/g, " ");
+                const instruction = this.decodeInstruction(normalized, index + 1);
+                const lineProblems = this.validateInstruction(instruction);
+
+                if (lineProblems.length > 0) {
+                    problems.push(...lineProblems);
+                    return;
+                }
+
+                program.push(instruction);
+            });
+
+        return { program, problems };
+    }
+
+    static decodeInstruction(line, lineNumber) {
 
         const parts = line.split(" ");
-        return new Instruction(parts[0].toUpperCase(), parts.slice(1));
+        return new Instruction(parts[0].toUpperCase(), parts.slice(1), lineNumber);
+
+    }
+
+    static validateInstruction(instruction) {
+
+        const problems = [];
+        const { op, args = [], line } = instruction;
+
+        if (!this.isValidOpcode(op)) {
+            problems.push({
+                type: "error",
+                message: `Unknown opcode "${op}"`,
+                line
+            });
+            return problems;
+        }
+
+        switch (op) {
+            case "NOP":
+            case "HLT":
+                if (args.length !== 0) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} does not take operands`,
+                        line
+                    });
+                }
+                break;
+
+            case "ADD":
+            case "SUB":
+            case "NOR":
+            case "AND":
+            case "XOR":
+                if (args.length !== 3) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires 3 operands`,
+                        line
+                    });
+                    break;
+                }
+
+                [0, 1, 2].forEach(index => {
+                    if (!this.isRegister(args[index])) {
+                        problems.push({
+                            type: "error",
+                            message: `Operand ${index + 1} must be a valid register`,
+                            line
+                        });
+                    }
+                });
+                break;
+
+            case "RSH":
+                if (args.length !== 2) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires 2 operands`,
+                        line
+                    });
+                    break;
+                }
+
+                if (!this.isRegister(args[0]) || !this.isRegister(args[1])) {
+                    problems.push({
+                        type: "error",
+                        message: `RSH requires two register operands`,
+                        line
+                    });
+                }
+                break;
+
+            case "LDI":
+            case "ADI":
+                if (args.length !== 2) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires 2 operands`,
+                        line
+                    });
+                    break;
+                }
+
+                if (!this.isRegister(args[0]) || !this.isImmediateArg(args[1])) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires a register and an immediate value`,
+                        line
+                    });
+                    break;
+                }
+
+                if (this.parseImmediate(args[1]) < 0 || this.parseImmediate(args[1]) > 255) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} immediate value must be between 0 and 255`,
+                        line
+                    });
+                }
+                break;
+
+            case "JMP":
+            case "CAL":
+                if (args.length !== 1 || !this.isImmediateArg(args[0])) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires one immediate address`,
+                        line
+                    });
+                    break;
+                }
+
+                if (this.parseImmediate(args[0]) < 0 || this.parseImmediate(args[0]) > 1023) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} address must be between 0 and 1023`,
+                        line
+                    });
+                }
+                break;
+
+            case "BRH":
+                if (args.length !== 2) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires a condition and an address`,
+                        line
+                    });
+                    break;
+                }
+
+                if (!this.isBranchCondition(args[0])) {
+                    problems.push({
+                        type: "error",
+                        message: `BRH condition must be one of: 0, Z, !0, !Z, C, !C`,
+                        line
+                    });
+                }
+
+                if (!this.isImmediateArg(args[1])) {
+                    problems.push({
+                        type: "error",
+                        message: `BRH address must be an immediate value`,
+                        line
+                    });
+                    break;
+                }
+
+                if (this.parseImmediate(args[1]) < 0 || this.parseImmediate(args[1]) > 1023) {
+                    problems.push({
+                        type: "error",
+                        message: `BRH address must be between 0 and 1023`,
+                        line
+                    });
+                }
+                break;
+
+            case "RET":
+                if (args.length !== 0) {
+                    problems.push({
+                        type: "error",
+                        message: `RET does not take operands`,
+                        line
+                    });
+                }
+                break;
+
+            case "LOD":
+            case "STR":
+                if (args.length !== 2 && args.length !== 3) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} requires 2 or 3 operands`,
+                        line
+                    });
+                    break;
+                }
+
+                if (!this.isRegister(args[0])) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} pointer operand must be a register`,
+                        line
+                    });
+                }
+
+                if (!this.isRegister(args[1])) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} data operand must be a register`,
+                        line
+                    });
+                }
+
+                if (args.length === 3 && !this.isImmediateArg(args[2])) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} offset must be an immediate value`,
+                        line
+                    });
+                    break;
+                }
+
+                if (args.length === 3 && (this.parseImmediate(args[2]) < -8 || this.parseImmediate(args[2]) > 7)) {
+                    problems.push({
+                        type: "error",
+                        message: `${op} offset must be between -8 and 7`,
+                        line
+                    });
+                }
+                break;
+        }
+
+        return problems;
+    }
+
+    static isValidOpcode(op) {
+
+        return [
+            "NOP", "HLT",
+            "ADD", "SUB", "NOR", "AND", "XOR", "RSH",
+            "LDI", "ADI",
+            "JMP", "BRH", "CAL", "RET",
+            "LOD", "STR"
+        ].includes(op);
+
+    }
+
+    static isRegister(value) {
+
+        return typeof value === "string" && /^r(?:[0-9]|1[0-5])$/.test(value);
+
+    }
+
+    static isImmediateArg(value) {
+
+        if (typeof value !== "string") return false;
+
+        if (value.startsWith("0b")) return !Number.isNaN(parseInt(value.slice(2), 2));
+        if (value.startsWith("0x")) return !Number.isNaN(parseInt(value.slice(2), 16));
+
+        return !Number.isNaN(Number(value));
+
+    }
+
+    static isBranchCondition(value) {
+
+        return ["0", "Z", "!0", "!Z", "C", "!C"].includes(value.toUpperCase());
 
     }
 
@@ -1182,10 +1568,11 @@ class Assembler {
 
 class Instruction {
 
-    constructor(op, args) {
+    constructor(op, args, line = null) {
 
         this.op = op;
         this.args = args;
+        this.line = line;
 
     }
 
@@ -1267,9 +1654,14 @@ class CPU {
             return;
         }
 
-        this.execute(
-            this.program[this.pc++]
-        );
+        const instruction = this.program[this.pc++];
+
+        try {
+            this.execute(instruction);
+        } catch (err) {
+            problems.add("error", err.message, instruction.line);
+            this.running = false;
+        }
 
         this.registers[0] = 0;
 
@@ -1569,6 +1961,14 @@ class UI {
 
     }
 
+    updateStack() {
+        const stackSize = document.getElementById("stack-size");
+        const stackTop = document.getElementById("stack-top");
+
+        stackSize.querySelector(".stack-value").textContent = this.cpu.stack.length;
+        stackTop.querySelector(".stack-value").textContent = this.cpu.stack.length > 0 ? this.cpu.stack[this.cpu.stack.length - 1] : "----------";
+    }
+
     updateRegisters() {
 
         for (let i = 1; i < 16; i++) {
@@ -1598,13 +1998,21 @@ class UI {
         this.setStatus(this.cpu.running);
 
         this.updateFlags();
+        this.updateStack();
         this.updateRegisters();
         this.updateMemory();
 
-        document.querySelector(
-            "#cpu-status-bar div:nth-child(2)"
-        ).textContent =
-            `PC: ${String(this.cpu.pc).padStart(4, "0")}`;
+        if (this.cpu.pc !== 0) {
+            document.querySelector(
+                "#cpu-status-bar div:nth-child(2)"
+            ).textContent =
+                `PC: ${String(this.cpu.pc - 1).padStart(4, "0")}`;
+        } else {
+            document.querySelector(
+                "#cpu-status-bar div:nth-child(2)"
+            ).textContent =
+                `PC: ----`;
+        }
 
     }
 
@@ -2052,6 +2460,30 @@ function updateSpeedText(value) {
     speedValue.textContent = `${value} Hz`;
 }
 
+function updateEditorGutter(source = codeEditor.value) {
+    const assembly = Assembler.assembleWithDiagnostics(source);
+    const programLineMap = new Map(
+        assembly.program.map((instruction, index) => [instruction.line, index])
+    );
+
+    editorLineMap.length = 0;
+    const gutterLines = source.split("\n").map((rawLine, index) => {
+        const lineText = rawLine.split(";")[0].trim();
+
+        if (!lineText) {
+            editorLineMap.push(null);
+            return `<div class="editor-gutter-line"><span class="gutter-line-number">${index + 1}</span><span class="gutter-instruction-number"></span></div>`;
+        }
+
+        const programIndex = programLineMap.get(index + 1);
+        editorLineMap.push(programIndex === undefined ? null : programIndex);
+        return `<div class="editor-gutter-line"><span class="gutter-line-number">${index + 1}</span><span class="gutter-instruction-number">${programIndex === undefined ? "" : String(programIndex)}</span></div>`;
+    });
+
+    editorGutter.innerHTML = gutterLines.join("");
+    editorGutter.scrollTop = codeEditor.scrollTop;
+}
+
 /* ===== UI updates ===== */
 function updateSpeedUI() {
     const targetSpeed = Number(speedSlider.value);
@@ -2064,9 +2496,17 @@ function updateSpeedUI() {
 }
 
 function loadProgram() {
-    cpu.program = Assembler.assemble(document.getElementById("code-editor").value);
+    const source = codeEditor.value;
+    const assembly = Assembler.assembleWithDiagnostics(source);
+
+    cpu.program = assembly.program;
     cpu.pc = 0;
-    cpu.loaded = true;
+    cpu.loaded = assembly.problems.length === 0;
+    problems.set(assembly.problems.map(problem => ({
+        ...problem,
+        line: problem.line
+    })));
+    updateEditorGutter(source);
 }
 
 /* ===== Input Handling ===== */
@@ -2080,11 +2520,16 @@ document.getElementById("clock-toggle").onclick = () => {
         loadProgram();
     }
 
+    if (problems.items.length > 0 || cpu.program.length === 0) {
+        return;
+    }
+
     machine.start();
 };
 
 document.getElementById("line-step").onclick = () => {
     if (cpu.program.length === 0) loadProgram();
+    if (problems.items.length > 0) return;
     machine.tick();
 };
 
@@ -2094,12 +2539,20 @@ document.getElementById("reset-program").onclick = () => {
     cpu.loaded = false;
     cpu.program = [];
 };
+codeEditor.addEventListener("input", () => {
+    loadProgram();
+});
+
+codeEditor.addEventListener("scroll", () => {
+    editorGutter.scrollTop = codeEditor.scrollTop;
+});
 
 speedSlider.addEventListener("input", updateSpeedUI);
 
 /* ===== Initialization ===== */
 function init() {
     updateSpeedUI();
+    loadProgram();
     ui.render();
 }
 
