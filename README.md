@@ -108,6 +108,8 @@ Comments begin with a semicolon (`;`), two forward slashes (`//`), or a hashtag 
 
 The emulator can execute programs continuously or one instruction at a time for debugging.
 
+You can also save and load programs in many ways, including `localStorage`, `.as` files, and `.mc` files.
+
 ---
 
 # Included Hardware
@@ -182,11 +184,11 @@ More example programs will be added as the emulator continues to develop.
 * Error reporting
 * Documentation
 * Preset programs
+* Save and load projects
 
 ## Planned
 
 * Syntax highlighting
-* Save and load projects
 * Improved debugging
 * Additional preset programs
 * Performance optimizations
