@@ -614,6 +614,23 @@ const Documentation = {
                         </ul>
                     </div>
                 </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.5</h2>
+                        <span class="doc-badge">NEW FEATURES</span>
+                        <span class="doc-badge">QUALITY OF LIFE</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>July 30, 2026</h3>
+                        <ul>
+                            <li>Increased the speed at which programs can run</li>
+                            <li>Added the options to save and load programs to and from localStorage</li>
+                            <li>Added the options to import/export programs as assembly (.as) files<li>
+                            <li>Added the options to import/export programs as machine code (.mc) files<li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         `;
         }
