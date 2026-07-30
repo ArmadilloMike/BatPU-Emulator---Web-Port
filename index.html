@@ -71,6 +71,8 @@
                             <button id="clock-toggle">▶ Run</button>
                             <button id="line-step">Step Inst</button>
                             <button id="reset-program">⟲ Reset</button>
+                            <button id="save-program">⤓ Save</button>
+                            <button id="load-program">↥ Load</button>
                         </div>
 
                         <div id="speed-control">
@@ -79,15 +81,15 @@
                                 <span id="speed-value">100 Hz</span>
                             </div>
 
-                            <input id="program-speed-slider" name="speed" type="range" min="1" max="1000" step="1"
-                                value="100" list="markers">
+                            <input id="program-speed-slider" name="speed" type="range" min="1" max="10000" step="1"
+                                value="500" list="markers">
 
                             <datalist id="markers">
                                 <option value="1"></option>
-                                <option value="250"></option>
-                                <option value="500"></option>
-                                <option value="750"></option>
-                                <option value="1000"></option>
+                                <option value="2500"></option>
+                                <option value="5000"></option>
+                                <option value="7500"></option>
+                                <option value="10000"></option>
                             </datalist>
                         </div>
 
