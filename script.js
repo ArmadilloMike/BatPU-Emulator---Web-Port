@@ -672,6 +672,327 @@ class Assembler {
 
     }
 
+    static OPCODES = Object.freeze({
+        NOP: 0,
+        HLT: 1,
+
+        ADD: 2,
+        SUB: 3,
+        NOR: 4,
+        AND: 5,
+        XOR: 6,
+        RSH: 7,
+
+        LDI: 8,
+        ADI: 9,
+
+        JMP: 10,
+        BRH: 11,
+        CAL: 12,
+        RET: 13,
+
+        LOD: 14,
+        STR: 15
+    });
+
+    static BRANCH_CONDITIONS = Object.freeze({
+        "0": 0,
+        "Z": 0,
+
+        "!0": 1,
+        "!Z": 1,
+
+        "C": 2,
+
+        "!C": 3
+    });
+
+    static encodeInstruction(instruction) {
+
+        const { op, args } = instruction;
+
+        const opcode = this.OPCODES[op];
+
+        if (opcode === undefined) {
+            throw new Error(`Cannot encode unknown opcode "${op}"`);
+        }
+
+        const register = value => Number(value.slice(1));
+        const immediate = value => this.parseImmediate(value);
+
+        let machineCode = opcode << 12;
+
+        switch (op) {
+
+            // No operands
+            case "NOP":
+            case "HLT":
+            case "RET":
+                break;
+
+
+            // 3 Registers
+            case "ADD":
+            case "SUB":
+            case "NOR":
+            case "AND":
+            case "XOR": {
+
+                const rA = register(args[0]);
+                const rB = register(args[1]);
+                const rC = register(args[2]);
+
+                machineCode |=
+                    (rA << 8) |
+                    (rB << 4) |
+                    rC;
+
+                break;
+            }
+
+
+            // 2 Registers
+            case "RSH": {
+
+                const rA = register(args[0]);
+                const rC = register(args[1]);
+
+                machineCode |=
+                    (rA << 8) |
+                    rC;
+
+                break;
+            }
+
+
+            // Register and Immediate
+            case "LDI":
+            case "ADI": {
+
+                const rA = register(args[0]);
+                const value = immediate(args[1]);
+
+                machineCode |=
+                    (rA << 8) |
+                    (value & 0xff);
+
+                break;
+            }
+
+
+            // PC Address
+            case "JMP":
+            case "CAL": {
+
+                const address = immediate(args[0]);
+
+                machineCode |= address & 0x3ff;
+
+                break;
+            }
+
+
+            // Condition and PC Address
+            case "BRH": {
+
+                const condition =
+                    this.BRANCH_CONDITIONS[args[0].toUpperCase()];
+
+                const address = immediate(args[1]);
+
+                if (condition === undefined) {
+                    throw new Error(
+                        `Cannot encode invalid branch condition "${args[0]}"`
+                    );
+                }
+
+                machineCode |=
+                    (condition << 10) |
+                    (address & 0x3ff);
+
+                break;
+            }
+
+
+            // 2 Registers and Signed Offset
+            case "LOD":
+            case "STR": {
+
+                const rA = register(args[0]);
+                const rB = register(args[1]);
+
+                const offset =
+                    args.length === 3
+                        ? immediate(args[2])
+                        : 0;
+
+                machineCode |=
+                    (rA << 8) |
+                    (rB << 4) |
+                    (offset & 0x0f);
+
+                break;
+            }
+
+
+            default:
+                throw new Error(
+                    `No machine-code encoder exists for "${op}"`
+                );
+
+        }
+
+        return machineCode;
+    }
+
+    static encodeProgram(program) {
+
+        return program.map(instruction => {
+
+            const machineCode =
+                this.encodeInstruction(instruction);
+
+            return machineCode
+                .toString(2)
+                .padStart(16, "0");
+
+        });
+
+    }
+
+    static decodeMachineCode(machineCode) {
+
+        const opcode =
+            (machineCode >> 12) & 0x0f;
+
+        const rA =
+            (machineCode >> 8) & 0x0f;
+
+        const rB =
+            (machineCode >> 4) & 0x0f;
+
+        const rC =
+            machineCode & 0x0f;
+
+        const immediate =
+            machineCode & 0xff;
+
+        const address =
+            machineCode & 0x3ff;
+
+        const condition =
+            (machineCode >> 10) & 0x03;
+
+        const opcodeEntry =
+            Object.entries(this.OPCODES)
+                .find(([, value]) => value === opcode);
+
+        if (!opcodeEntry) {
+
+            throw new Error(
+                `Unknown opcode: ${opcode}`
+            );
+
+        }
+
+        const op =
+            opcodeEntry[0];
+
+        switch (op) {
+
+            case "NOP":
+            case "HLT":
+            case "RET":
+
+                return op;
+
+
+            case "ADD":
+            case "SUB":
+            case "NOR":
+            case "AND":
+            case "XOR":
+
+                return `${op} r${rA} r${rB} r${rC}`;
+
+
+            case "RSH":
+
+                return `${op} r${rA} r${rC}`;
+
+
+            case "LDI":
+            case "ADI":
+
+                return `${op} r${rA} ${immediate}`;
+
+
+            case "JMP":
+            case "CAL":
+
+                return `${op} ${address}`;
+
+
+            case "BRH": {
+
+                const conditions = [
+                    "Z",
+                    "!Z",
+                    "C",
+                    "!C"
+                ];
+
+                return `BRH ${conditions[condition]} ${address}`;
+
+            }
+
+
+            case "LOD":
+            case "STR": {
+
+                let offset =
+                    machineCode & 0x0f;
+
+                // Convert 4-bit two's complement
+                // back into a signed integer.
+                if (offset >= 8) {
+                    offset -= 16;
+                }
+
+                if (offset === 0) {
+
+                    return `${op} r${rA} r${rB}`;
+
+                }
+
+                return `${op} r${rA} r${rB} ${offset}`;
+
+            }
+
+
+            default:
+
+                throw new Error(
+                    `Cannot decode opcode "${op}"`
+                );
+
+        }
+
+    }
+
+    static decodeProgram(machineCodeLines) {
+
+        return machineCodeLines.map(line => {
+
+            const machineCode =
+                parseInt(line, 2);
+
+            return this.decodeMachineCode(machineCode);
+
+        });
+
+    }
+
 }
 
 class Instruction {
@@ -681,6 +1002,546 @@ class Instruction {
         this.op = op;
         this.args = args;
         this.line = line;
+
+    }
+
+}
+
+class SaveManager {
+
+    constructor(codeEditor, problems, cpu, machine) {
+
+        this.codeEditor = codeEditor;
+        this.problems = problems;
+        this.cpu = cpu;
+        this.machine = machine;
+
+        this.storageKey = "batpu-current-program";
+
+        this.saveButton =
+            document.getElementById("save-program");
+
+        this.loadButton =
+            document.getElementById("load-program");
+
+        this.saveButton.addEventListener(
+            "click",
+            () => this.openSaveMenu()
+        );
+
+        this.loadButton.addEventListener(
+            "click",
+            () => this.openLoadMenu()
+        );
+
+    }
+
+    async openSaveMenu() {
+
+        const result = await Swal.fire({
+
+            title: "Save Program",
+
+            text: "Choose how you want to save the current program.",
+
+            showCloseButton: true,
+
+            showDenyButton: true,
+            showCancelButton: true,
+
+            confirmButtonText: "LocalStorage",
+            denyButtonText: "Export Assembly (.as)",
+            cancelButtonText: "Export Binary (.mc)",
+
+            buttonsStyling: false,
+
+            allowOutsideClick: true
+
+        });
+
+        if (result.isConfirmed) {
+
+            this.saveToLocalStorage();
+
+        } else if (result.isDenied) {
+
+            this.exportAssembly();
+
+        } else if (
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+
+            this.exportMachineCode();
+
+        }
+
+    }
+
+    async openLoadMenu() {
+
+        const result = await Swal.fire({
+
+            title: "Load Program",
+
+            text: "Choose where you want to load from.",
+
+            showCloseButton: true,
+
+            showDenyButton: true,
+            showCancelButton: true,
+
+            confirmButtonText: "LocalStorage",
+            denyButtonText: "Import Assembly (.as)",
+            cancelButtonText: "Import Binary (.mc)",
+
+            buttonsStyling: false,
+
+            allowOutsideClick: true
+
+        })
+
+        if (result.isConfirmed) {
+
+            this.loadFromLocalStorage();
+
+        } else if (result.isDenied) {
+
+            this.importAssembly();
+
+        } else if (
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+
+            this.importMachineCode();
+
+        }
+
+    }
+
+    saveToLocalStorage() {
+
+        localStorage.setItem(
+            this.storageKey,
+            this.codeEditor.value
+        );
+
+        Swal.fire({
+
+            title: "Program Saved",
+
+            text: "The current program was saved to LocalStorage.",
+
+            icon: "success",
+
+            confirmButtonText: "OK",
+
+            buttonsStyling: false
+
+        });
+
+    }
+
+    loadFromLocalStorage() {
+
+        const savedProgram =
+            localStorage.getItem(this.storageKey);
+
+        if (savedProgram === null) {
+
+            Swal.fire({
+                title: "No Saved Program",
+                text: "There is no program saved in LocalStorage.",
+                icon: "info",
+                confirmButtonText: "OK",
+                buttonsStyling: false
+            });
+
+            return false;
+
+        }
+
+        this.codeEditor.value = savedProgram;
+
+        // Assemble and load the program
+        loadProgram();
+
+        // Reset CPU and machine state
+        this.machine.reset();
+
+        return true;
+
+    }
+
+    exportAssembly() {
+
+        const source = this.codeEditor.value;
+
+        const output =
+            source.endsWith("\n")
+                ? source
+                : source + "\n";
+
+        this.downloadFile(
+            "program.as",
+            output
+        );
+
+    }
+
+    async importAssembly() {
+
+        const file = await this.pickFile(".as,text/plain");
+
+        if (!file) return false;
+
+        try {
+
+            const source = await file.text();
+
+            if (source.trim().length === 0) {
+
+                await Swal.fire({
+
+                    title: "Empty File",
+
+                    text: "The selected assembly file does not contain any code.",
+
+                    icon: "warning",
+
+                    confirmButtonText: "OK",
+
+                    buttonsStyling: false
+
+                });
+
+                return false;
+
+            }
+
+            const assembly =
+                Assembler.assembleWithDiagnostics(source);
+
+            if (assembly.problems.length > 0) {
+
+                this.problems.set(
+                    assembly.problems
+                );
+
+                await Swal.fire({
+
+                    title: "Cannot Import Assembly",
+
+                    text: "The selected file contains assembly errors. Fix them before importing.",
+
+                    icon: "error",
+
+                    confirmButtonText: "OK",
+
+                    buttonsStyling: false
+
+                });
+
+                return false;
+
+            }
+
+            this.codeEditor.value = source;
+
+            loadProgram();
+
+            this.machine.reset();
+
+            await Swal.fire({
+
+                title: "Assembly Imported",
+
+                text: "The assembly program was successfully loaded.",
+
+                icon: "success",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return true;
+
+        } catch (error) {
+
+            await Swal.fire({
+
+                title: "Import Failed",
+
+                text: `Could not read the selected file: ${error.message}`,
+
+                icon: "error",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return false;
+
+        }
+
+    }
+
+    exportMachineCode() {
+
+        const assembly =
+            Assembler.assembleWithDiagnostics(
+                this.codeEditor.value
+            );
+
+        if (assembly.problems.length > 0) {
+
+            this.problems.set(
+                assembly.problems
+            );
+
+            Swal.fire({
+
+                title: "Cannot Export Machine Code",
+
+                text: "The program contains errors. Fix the problems before exporting.",
+
+                icon: "error",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return;
+
+        }
+
+        if (assembly.program.length === 0) {
+
+            Swal.fire({
+
+                title: "Nothing to Export",
+
+                text: "The program does not contain any instructions.",
+
+                icon: "warning",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return;
+
+        }
+
+        const machineCode =
+            Assembler
+                .encodeProgram(assembly.program)
+                .join("\n");
+
+        this.downloadFile(
+            "program.mc",
+            machineCode + "\n"
+        );
+
+    }
+
+    async importMachineCode() {
+
+        const file = await this.pickFile(".mc,text/plain");
+
+        if (!file) return false;
+
+        try {
+
+            const text = await file.text();
+
+            const lines = text
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (lines.length === 0) {
+
+                await Swal.fire({
+
+                    title: "Empty File",
+
+                    text: "The selected binary file does not contain any machine code.",
+
+                    icon: "warning",
+
+                    confirmButtonText: "OK",
+
+                    buttonsStyling: false
+
+                });
+
+                return false;
+
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+
+                if (!/^[01]{16}$/.test(lines[i])) {
+
+                    await Swal.fire({
+
+                        title: "Invalid Machine Code",
+
+                        text: `Line ${i + 1} must contain exactly 16 binary digits.`,
+
+                        icon: "error",
+
+                        confirmButtonText: "OK",
+
+                        buttonsStyling: false
+
+                    });
+
+                    return false;
+
+                }
+
+            }
+
+            const assemblyLines =
+                Assembler.decodeProgram(lines);
+
+            const source =
+                assemblyLines.join("\n");
+
+            this.codeEditor.value = source;
+
+            loadProgram();
+
+            this.machine.reset();
+
+            await Swal.fire({
+
+                title: "Machine Code Imported",
+
+                text: "The binary program was successfully decoded and loaded.",
+
+                icon: "success",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return true;
+
+        } catch (error) {
+
+            await Swal.fire({
+
+                title: "Import Failed",
+
+                text: `Could not decode the selected file: ${error.message}`,
+
+                icon: "error",
+
+                confirmButtonText: "OK",
+
+                buttonsStyling: false
+
+            });
+
+            return false;
+
+        }
+
+    }
+
+    downloadFile(filename, contents) {
+
+        const blob = new Blob(
+            [contents],
+            {
+                type: "text/plain;charset=utf-8"
+            }
+        );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        setTimeout(() => {
+
+            URL.revokeObjectURL(url);
+
+        }, 0);
+
+    }
+
+    async pickFile(accept) {
+
+        return new Promise(resolve => {
+
+            const input =
+                document.createElement("input");
+
+            input.type = "file";
+            input.accept = accept;
+
+            let resolved = false;
+
+            const finish = file => {
+
+                if (resolved) return;
+
+                resolved = true;
+
+                input.remove();
+
+                resolve(file);
+
+            };
+
+            input.addEventListener(
+                "change",
+                () => {
+
+                    finish(
+                        input.files?.[0] ?? null
+                    );
+
+                },
+                { once: true }
+            );
+
+            input.addEventListener(
+                "cancel",
+                () => {
+
+                    finish(null);
+
+                },
+                { once: true }
+            );
+
+            input.click();
+
+        });
 
     }
 
@@ -1630,6 +2491,7 @@ const controller = new ControllerDevice(memory);
 const cpu = new CPU(memory);
 const ui = new UI(cpu, memory);
 const machine = new Machine(cpu, memory, ui);
+const saveManager = new SaveManager(codeEditor, problems, cpu, machine);
 
 /* ===== Helpers ===== */
 const clamp = (v, max) => Math.min(max - 1, Math.max(0, v));
