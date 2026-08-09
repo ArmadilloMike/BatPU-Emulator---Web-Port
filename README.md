@@ -49,6 +49,7 @@ Run programs, interact with virtual hardware devices in real time, and learn low
 * Built-in I/O protocol documentation
 * Help guide
 * Example programs with one-click loading
+* Customizable site theme
 * Runs entirely inside the browser
 
 ---
@@ -60,28 +61,6 @@ The BatPU Emulator is a browser implementation of the **BatPU VM** designed by *
 The goal of this project was to create a browser-based version of the original application, for writing and running programs without needing to launch Minecraft. It also serves as a learning tool for understanding how a complete computer works at the hardware and assembly level.
 
 This version of the emulator also comes with the full built-in CPU documentation and debugging tools to make writing programs much easier.
-
----
-
-# Interface Overview
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                      BatPU Emulator                          │
-├──────────────┬─────────────────────┬─────────────────────────┤
-│              │                     │                         │
-│ Output       │ CPU Controls        │ Assembly Editor         │
-│ Devices      │                     │                         │
-│              │ Flags               │                         │
-│ Controller   │ Call Stack          │                         │
-│              │                     │                         │
-│              │ Registers           │                         │
-│              │ Data Memory         │                         │
-│              │                     │                         │
-├──────────────┴─────────────────────┴─────────────────────────┤
-│ Problems │ ISA │ I/O │ Help │ Presets │ About │ Changelog    │
-└──────────────────────────────────────────────────────────────┘
-```
 
 ---
 
@@ -170,6 +149,17 @@ More example programs will be added as the emulator continues to develop.
 
 ---
 
+# Customization
+
+You can customize the look of the emulator in the settings.
+
+Site Themes:
+* Default (Dark)
+* Light
+* Machine
+
+---
+
 # Roadmap
 
 ## Completed
@@ -185,6 +175,7 @@ More example programs will be added as the emulator continues to develop.
 * Documentation
 * Preset programs
 * Save and load projects
+* Site themes
 
 ## Planned
 
