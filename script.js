@@ -148,7 +148,154 @@ class DocumentationManager {
 
 }
 
+class SettingsManager {
+
+    constructor(modal) {
+
+        this.modal = modal;
+
+        this.storageKey = "batpu-settings";
+
+        this.themes = {
+            default: "Default",
+            light: "Light",
+            machine: "Machine",
+        };
+
+        this.settings = {
+            theme: this.loadTheme()
+        };
+
+        this.applyTheme();
+
+    }
+
+    loadTheme() {
+
+        const saved =
+            localStorage.getItem(this.storageKey);
+
+        if (!saved) {
+            return "default";
+        }
+
+        try {
+
+            const settings = JSON.parse(saved);
+
+            if (this.themes[settings.theme]) {
+                return settings.theme;
+            }
+
+        } catch {
+            // Ignore invalid settings
+        }
+
+        return "default";
+
+    }
+
+    save() {
+
+        localStorage.setItem(
+            this.storageKey,
+            JSON.stringify(this.settings)
+        );
+
+    }
+
+    applyTheme() {
+
+        document.documentElement.dataset.theme =
+            this.settings.theme;
+
+    }
+
+    setTheme(theme) {
+
+        if (!this.themes[theme]) return;
+
+        this.settings.theme = theme;
+
+        this.applyTheme();
+        this.save();
+
+    }
+
+    open() {
+
+        this.modal.open(
+            "Settings",
+            this.render()
+        );
+
+        this.bindEvents();
+
+    }
+
+    render() {
+
+        return `
+
+            <div class="doc-page">
+
+                <div class="doc-header">
+                    <h1>Settings</h1>
+                    <p>Manage emulator appearance and theme preferences.</p>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Appearance</h2>
+                    </div>
+
+                    <div class="doc-section settings-section">
+                        <div class="settings-meta">
+                            <div class="settings-label">Theme</div>
+                            <div class="settings-description">
+                                Choose the appearance of the emulator.
+                            </div>
+                        </div>
+
+                        <select id="theme-select" class="settings-select">
+                            ${Object.entries(this.themes)
+                .map(([value, name]) => `
+                                    <option
+                                        value="${value}"
+                                        ${value === this.settings.theme
+                        ? "selected"
+                        : ""}
+                                    >
+                                        ${name}
+                                    </option>
+                                `)
+                .join("")}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+    bindEvents() {
+
+        const themeSelect =
+            document.getElementById("theme-select");
+
+        themeSelect.addEventListener(
+            "change",
+            () => this.setTheme(themeSelect.value)
+        );
+
+    }
+
+}
+
 const docs = new DocumentationManager(modal);
+const settings = new SettingsManager(modal);
 
 const docButtons = {
     isa: document.getElementById("isa-button"),
@@ -162,6 +309,9 @@ const docButtons = {
 Object.entries(docButtons).forEach(([page, button]) => {
     button.addEventListener("click", () => docs.open(page));
 });
+
+const settingsButton = document.getElementById("settings-button");
+settingsButton.addEventListener("click", () => settings.open());
 
 const projectRepoButton = document.getElementById("project-repo-button");
 projectRepoButton.onclick = () => {
@@ -1125,19 +1275,7 @@ class SaveManager {
             this.codeEditor.value
         );
 
-        Swal.fire({
-
-            title: "Program Saved",
-
-            text: "The current program was saved to LocalStorage.",
-
-            icon: "success",
-
-            confirmButtonText: "OK",
-
-            buttonsStyling: false
-
-        });
+        showToast("Program saved to LocalStorage");
 
     }
 
@@ -1148,13 +1286,7 @@ class SaveManager {
 
         if (savedProgram === null) {
 
-            Swal.fire({
-                title: "No Saved Program",
-                text: "There is no program saved in LocalStorage.",
-                icon: "info",
-                confirmButtonText: "OK",
-                buttonsStyling: false
-            });
+            showToast("No saved program found", "info");
 
             return false;
 
@@ -1167,6 +1299,8 @@ class SaveManager {
 
         // Reset CPU and machine state
         this.machine.reset();
+
+        showToast("Program loaded from LocalStorage");
 
         return true;
 
@@ -1186,6 +1320,8 @@ class SaveManager {
             output
         );
 
+        showToast("Program exported as program.as");
+
     }
 
     async importAssembly() {
@@ -1200,19 +1336,7 @@ class SaveManager {
 
             if (source.trim().length === 0) {
 
-                await Swal.fire({
-
-                    title: "Empty File",
-
-                    text: "The selected assembly file does not contain any code.",
-
-                    icon: "warning",
-
-                    confirmButtonText: "OK",
-
-                    buttonsStyling: false
-
-                });
+                showToast("Selected file is empty", "warning");
 
                 return false;
 
@@ -1227,19 +1351,7 @@ class SaveManager {
                     assembly.problems
                 );
 
-                await Swal.fire({
-
-                    title: "Cannot Import Assembly",
-
-                    text: "The selected file contains assembly errors. Fix them before importing.",
-
-                    icon: "error",
-
-                    confirmButtonText: "OK",
-
-                    buttonsStyling: false
-
-                });
+                showToast("Assembly file contains errors, cannot import", "error");
 
                 return false;
 
@@ -1251,37 +1363,13 @@ class SaveManager {
 
             this.machine.reset();
 
-            await Swal.fire({
-
-                title: "Assembly Imported",
-
-                text: "The assembly program was successfully loaded.",
-
-                icon: "success",
-
-                confirmButtonText: "OK",
-
-                buttonsStyling: false
-
-            });
+            showToast("Assembly program imported successfully");
 
             return true;
 
         } catch (error) {
 
-            await Swal.fire({
-
-                title: "Import Failed",
-
-                text: `Could not read the selected file: ${error.message}`,
-
-                icon: "error",
-
-                confirmButtonText: "OK",
-
-                buttonsStyling: false
-
-            });
+            showToast("Failed to import the selected file", "error");
 
             return false;
 
@@ -1302,19 +1390,7 @@ class SaveManager {
                 assembly.problems
             );
 
-            Swal.fire({
-
-                title: "Cannot Export Machine Code",
-
-                text: "The program contains errors. Fix the problems before exporting.",
-
-                icon: "error",
-
-                confirmButtonText: "OK",
-
-                buttonsStyling: false
-
-            });
+            showToast("Program contains errors, cannot export", "error");
 
             return;
 
@@ -1322,19 +1398,7 @@ class SaveManager {
 
         if (assembly.program.length === 0) {
 
-            Swal.fire({
-
-                title: "Nothing to Export",
-
-                text: "The program does not contain any instructions.",
-
-                icon: "warning",
-
-                confirmButtonText: "OK",
-
-                buttonsStyling: false
-
-            });
+            showToast("There was nothing to export", "warning");
 
             return;
 
@@ -1349,6 +1413,8 @@ class SaveManager {
             "program.mc",
             machineCode + "\n"
         );
+
+        showToast("Program exported as program.mc");
 
     }
 
@@ -1369,19 +1435,7 @@ class SaveManager {
 
             if (lines.length === 0) {
 
-                await Swal.fire({
-
-                    title: "Empty File",
-
-                    text: "The selected binary file does not contain any machine code.",
-
-                    icon: "warning",
-
-                    confirmButtonText: "OK",
-
-                    buttonsStyling: false
-
-                });
+                showToast("Selected file is empty", "warning");
 
                 return false;
 
@@ -1391,19 +1445,7 @@ class SaveManager {
 
                 if (!/^[01]{16}$/.test(lines[i])) {
 
-                    await Swal.fire({
-
-                        title: "Invalid Machine Code",
-
-                        text: `Line ${i + 1} must contain exactly 16 binary digits.`,
-
-                        icon: "error",
-
-                        confirmButtonText: "OK",
-
-                        buttonsStyling: false
-
-                    });
+                    showToast(`Line ${i + 1} is invalid, import aborted`, "error");
 
                     return false;
 
@@ -1423,19 +1465,7 @@ class SaveManager {
 
             this.machine.reset();
 
-            await Swal.fire({
-
-                title: "Machine Code Imported",
-
-                text: "The binary program was successfully decoded and loaded.",
-
-                icon: "success",
-
-                confirmButtonText: "OK",
-
-                buttonsStyling: false
-
-            });
+            showToast("Machine code program imported successfully");
 
             return true;
 
@@ -1454,6 +1484,8 @@ class SaveManager {
                 buttonsStyling: false
 
             });
+
+            showToast(`Failed to import the selected file: ${error.message}`, "error");
 
             return false;
 
@@ -2528,6 +2560,28 @@ function updateEditorGutter(source = codeEditor.value) {
 
     editorGutter.innerHTML = gutterLines.join("");
     editorGutter.scrollTop = codeEditor.scrollTop;
+}
+
+const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    background: "#171717",
+    color: "#ddd",
+    customClass: {
+        popup: "toast-popup"
+    }
+});
+
+function showToast(title, icon = "success") {
+
+    Toast.fire({
+        icon,
+        title
+    });
+
 }
 
 /* ===== UI updates ===== */
