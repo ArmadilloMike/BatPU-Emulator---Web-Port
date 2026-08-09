@@ -631,6 +631,34 @@ const Documentation = {
                         </ul>
                     </div>
                 </div>
+
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.6</h2>
+                        <span class="doc-badge">UI & STYLING</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>August 9, 2026</h3>
+                        <ul>
+                            <li>Completely refactored the styling system</li>
+                            <ul>
+                                <li>Switched all hardcoded colors to CSS variables</li>
+                                <li>Cleaned up the basic styling, I think it looks a lot cleaner now :)</li>
+                                <li>
+                                    Implemented Site Themes! You can now switch between the default and light
+                                    modes, along with a special "machine" theme, which is based off of the original
+                                    <a href="https://github.com/AdoHTQ/Batpu2-VM" target="_blank">virtual machine's color scheme</a>.
+                                    More themes will come soon!
+                                </li>
+                            </ul>
+                            <li>
+                                Added a new settings menu for switching between the different site themes. More
+                                functionality may be added later.
+                            </li>
+                            <li>Updated README to better reflect recent changes and improvements</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         `;
         }
