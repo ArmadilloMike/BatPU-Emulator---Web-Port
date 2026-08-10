@@ -2355,22 +2355,22 @@ class ControllerDevice extends Device {
         this.memory = memory;
 
         this.liveState = {
-            up: 0,
-            down: 0,
             left: 0,
+            down: 0,
             right: 0,
-            a: 0,
+            up: 0,
             b: 0,
+            a: 0,
             one: 0,
             two: 0
         }
         this.latchedState = {
-            up: 0,
-            down: 0,
             left: 0,
+            down: 0,
             right: 0,
-            a: 0,
+            up: 0,
             b: 0,
+            a: 0,
             one: 0,
             two: 0
         };
@@ -2407,12 +2407,12 @@ class ControllerDevice extends Device {
 
     initBtns() {
 
-        ["btn-up", "btn-dwn", "btn-lft", "btn-rgt"].forEach((id, i) =>
-            this.bindButton(id, ["up", "down", "left", "right"][i])
+        ["btn-lft", "btn-dwn", "btn-rgt", "btn-up"].forEach((id, i) =>
+            this.bindButton(id, ["left", "down", "right", "up"][i])
         );
 
-        this.bindButton("ctr-btn-a", "a");
         this.bindButton("ctr-btn-b", "b");
+        this.bindButton("ctr-btn-a", "a");
 
         this.bindButton("ctr-btn-one", "one");
         this.bindButton("ctr-btn-two", "two");
@@ -2425,12 +2425,12 @@ class ControllerDevice extends Device {
 
         let v = 0;
 
-        v |= this.latchedState.up << 0;
+        v |= this.latchedState.left << 0;
         v |= this.latchedState.down << 1;
-        v |= this.latchedState.left << 2;
-        v |= this.latchedState.right << 3;
-        v |= this.latchedState.a << 4;
-        v |= this.latchedState.b << 5;
+        v |= this.latchedState.right << 2;
+        v |= this.latchedState.up << 3;
+        v |= this.latchedState.b << 4;
+        v |= this.latchedState.c << 5;
         v |= this.latchedState.one << 6;
         v |= this.latchedState.two << 7;
 
