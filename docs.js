@@ -673,7 +673,7 @@ const Documentation = {
 							</ul>
 							<li>Fixed controller button mapping</li>
 							<ul>
-								<li>Buttons were mapped in the wrong order. Order should have been < v > ^ b a 1 2 instead of < ^ V > a b 1 2</li>
+								<li>Buttons were mapped in the wrong order. Order should have been &lt; v &gt; ^ b a 1 2 instead of &lt; ^ V &gt; a b 1 2</li>
 							</ul>
                         </ul>
                     </div>
