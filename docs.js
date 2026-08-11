@@ -658,6 +658,25 @@ const Documentation = {
                             <li>Updated README to better reflect recent changes and improvements</li>
                         </ul>
                     </div>
+
+					<div class="doc-card">
+                    <div class="doc-card-header">
+                        <h2>Version 1.61</h2>
+                        <span class="doc-badge">BUGFIXING</span>
+                    </div>
+                    <div class="doc-section">
+                        <h3>August 9, 2026</h3>
+                        <ul>
+                            <li>Fixed screen pixels</li>
+							<ul>
+								<li>Pixels were being generated from top to bottom instead of bottom to top</li>
+							</ul>
+							<li>Fixed controller button mapping</li>
+							<ul>
+								<li>Buttons were mapped in the wrong order. Order should have been < v > ^ b a 1 2 instead of < ^ V > a b 1 2</li>
+							</ul>
+                        </ul>
+                    </div>
                 </div>
             </div>
         `;
