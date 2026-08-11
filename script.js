@@ -366,10 +366,12 @@ const codeEditor = document.getElementById("code-editor");
 const editorLineMap = [];
 
 // Create pixel elements (32x32)
-for (let i = 0; i < 32 * 32; i++) {
-    const pixel = document.createElement("div");
-    pixel.className = "pixel";
-    pixelGrid.appendChild(pixel);
+for (let y = 31; y >= 0; y--) {
+    for (let x = 0; x < 32; x++) {
+        const pixel = document.createElement("div");
+        pixel.className = "pixel";
+        pixelGrid.appendChild(pixel);
+    }
 }
 
 // Create register cells cache
@@ -2034,7 +2036,10 @@ class UI {
         const source = screenDevice ? screenDevice.frontBuffer : null;
 
         for (let i = 0; i < 32 * 32; i++) {
-            const v = source ? source[i] : 0;
+            const row = Math.floor(i / 32);
+            const col = i % 32;
+            const sourceIndex = (31 - row) * 32 + col;
+            const v = source ? source[sourceIndex] : 0;
             if (!force && this.pixelState[i] === v) continue;
             this.pixelState[i] = v;
             pixelGrid.children[i].classList.toggle("active", !!v);
@@ -2430,7 +2435,7 @@ class ControllerDevice extends Device {
         v |= this.latchedState.right << 2;
         v |= this.latchedState.up << 3;
         v |= this.latchedState.b << 4;
-        v |= this.latchedState.c << 5;
+        v |= this.latchedState.a << 5;
         v |= this.latchedState.one << 6;
         v |= this.latchedState.two << 7;
 
